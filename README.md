@@ -7,7 +7,6 @@ Project goals:
 3) finding the best way to decompose modules and organize data structures for typical embedded project   
 4) development of a graphical interface for Windows for configuring, diagnosing and managing hardware
 
-Hardware
 Board nucleo-g474 is used as MCU, board x-nucleo-ihm07m1 is used as invertor and ACM601V36-T2500 is used as Permanent magnet synchronous motor.
 
 Completed stages:
