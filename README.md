@@ -8,9 +8,7 @@ Project goals:
 4) development of a graphical interface for Windows for configuring, diagnosing and managing hardware
 
 Hardware
-Board with MCU: nucleo-g474
-Board with invertor: x-nucleo-ihm07m1
-Permanent magnet synchronous motor: ACM601V36-T2500
+Board nucleo-g474 is used as MCU, board x-nucleo-ihm07m1 is used as invertor and ACM601V36-T2500 is used as Permanent magnet synchronous motor.
 
 Completed stages:
 1) development control system with liniar model of PMSM in Matlab/Simulink
