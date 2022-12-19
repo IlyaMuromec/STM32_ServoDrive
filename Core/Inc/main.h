@@ -29,6 +29,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g4xx_ll_adc.h"
+#include "stm32g4xx_ll_dac.h"
 #include "stm32g4xx_ll_dma.h"
 #include "stm32g4xx_ll_lpuart.h"
 #include "stm32g4xx_ll_rcc.h"
@@ -75,13 +76,13 @@ struct PID_param
 extern struct Var_data I_data;				
 extern struct Var_data V_data;
 
-extern volatile uint32_t dataADC1[7];
+extern volatile uint32_t dataADC1[8];
 
 extern float volatile Uin;
-extern float volatile Umcu;
+extern uint32_t volatile Umcu;
 extern float volatile Tboard;
 extern float volatile Rntc; 
-extern float volatile Tmcu;
+extern int32_t volatile Tmcu;
 
 extern volatile float Ifb[3];
 extern volatile float Ifb0;
@@ -99,9 +100,12 @@ extern float volatile rangeEnc;
 extern float volatile U0;
 extern const float T1;
 extern const float T2;
+extern float const F1; //
+extern float const F2; // 
 extern float const zp;
 extern uint32_t volatile flag_work;
-
+extern uint16_t volatile tick;
+extern uint16_t volatile Ntick;
 
 /* USER CODE END ET */
 

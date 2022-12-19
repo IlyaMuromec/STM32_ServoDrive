@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : TIM.h
+  * File Name          : DAC.h
   * Description        : This file provides code for the configuration
-  *                      of the TIM instances.
+  *                      of the DAC instances.
   ******************************************************************************
   * @attention
   *
@@ -17,8 +17,8 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __tim_H
-#define __tim_H
+#ifndef __dac_H
+#define __dac_H
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -34,27 +34,16 @@
 
 /* USER CODE END Private defines */
 
-void MX_TIM1_Init(void);
-void MX_TIM2_Init(void);
-void MX_TIM3_Init(void);
-void MX_TIM4_Init(void);
+void MX_DAC1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-void USER_TIM1_PWM_Init(void);
-void startPWM(void);
-void stopPWM(void);
-void updataPWM(const volatile uint32_t* REF);
-void calibEncoder(volatile uint32_t* REF);
-void USER_TIM2_ENCODER_Init(void);
-void USER_TIM5_SIN_Init(void);
-void USER_TIM3_Init(void);
-void USER_TIM4_Init(void);
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
 }
 #endif
-#endif /*__ tim_H */
+#endif /*__ dac_H */
 
 /**
   * @}

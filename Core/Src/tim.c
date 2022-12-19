@@ -69,7 +69,7 @@ void MX_TIM1_Init(void)
   TIM_OC_InitStruct.CompareValue = 0;
   LL_TIM_OC_Init(TIM1, LL_TIM_CHANNEL_CH3, &TIM_OC_InitStruct);
   LL_TIM_OC_EnableFast(TIM1, LL_TIM_CHANNEL_CH3);
-  LL_TIM_SetTriggerOutput(TIM1, LL_TIM_TRGO_RESET);
+  LL_TIM_SetTriggerOutput(TIM1, LL_TIM_TRGO_UPDATE);
   LL_TIM_SetTriggerOutput2(TIM1, LL_TIM_TRGO2_UPDATE);
   LL_TIM_DisableMasterSlaveMode(TIM1);
   TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
@@ -168,6 +168,51 @@ void MX_TIM2_Init(void)
   LL_TIM_DisableMasterSlaveMode(TIM2);
 
 }
+/* TIM3 init function */
+void MX_TIM3_Init(void)
+{
+  LL_TIM_InitTypeDef TIM_InitStruct = {0};
+
+  /* Peripheral clock enable */
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
+
+  /* TIM3 interrupt Init */
+  NVIC_SetPriority(TIM3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),1, 0));
+  NVIC_EnableIRQ(TIM3_IRQn);
+
+  TIM_InitStruct.Prescaler = 0;
+  TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
+  TIM_InitStruct.Autoreload = 9;
+  TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+  LL_TIM_Init(TIM3, &TIM_InitStruct);
+  LL_TIM_DisableARRPreload(TIM3);
+  LL_TIM_SetTriggerInput(TIM3, LL_TIM_TS_ITR0);
+  LL_TIM_SetClockSource(TIM3, LL_TIM_CLOCKSOURCE_EXT_MODE1);
+  LL_TIM_DisableIT_TRIG(TIM3);
+  LL_TIM_DisableDMAReq_TRIG(TIM3);
+  LL_TIM_SetTriggerOutput(TIM3, LL_TIM_TRGO_RESET);
+  LL_TIM_DisableMasterSlaveMode(TIM3);
+
+}
+/* TIM4 init function */
+void MX_TIM4_Init(void)
+{
+  LL_TIM_InitTypeDef TIM_InitStruct = {0};
+
+  /* Peripheral clock enable */
+  LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM4);
+
+  TIM_InitStruct.Prescaler = 0;
+  TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
+  TIM_InitStruct.Autoreload = 65535;
+  TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+  LL_TIM_Init(TIM4, &TIM_InitStruct);
+  LL_TIM_DisableARRPreload(TIM4);
+  LL_TIM_SetClockSource(TIM4, LL_TIM_CLOCKSOURCE_INTERNAL);
+  LL_TIM_SetTriggerOutput(TIM4, LL_TIM_TRGO_RESET);
+  LL_TIM_DisableMasterSlaveMode(TIM4);
+
+}
 
 /* USER CODE BEGIN 1 */
 
@@ -177,6 +222,18 @@ void USER_TIM1_PWM_Init(void)
 	LL_TIM_EnableCounter(TIM1);
 	LL_TIM_ClearFlag_UPDATE(TIM1);
 	//LL_TIM_EnableIT_UPDATE(TIM1); 
+}
+
+void USER_TIM3_Init(void)
+{
+	LL_TIM_EnableCounter(TIM3);
+	LL_TIM_ClearFlag_UPDATE(TIM3);
+	LL_TIM_EnableIT_UPDATE(TIM3); 
+}
+
+void USER_TIM4_Init(void)
+{
+	LL_TIM_EnableCounter(TIM4);
 }
 
 void startPWM(void)

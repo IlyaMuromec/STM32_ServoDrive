@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "dac.h"
 #include "dma.h"
 #include "usart.h"
 #include "tim.h"
@@ -58,7 +59,7 @@ struct Var_data V_data={0};
 struct PID_param I_PID_param={0};
 struct PID_param V_PID_param={0};
 
-uint32_t volatile dataADC1[7]={0};
+uint32_t volatile dataADC1[8]={0};
 // dataADC[0]=IA;
 // dataADC[1]=IB;
 // dataADC[2]=IC;
@@ -69,10 +70,10 @@ uint32_t volatile dataADC1[7]={0};
 // max data = 2^12 - 1 = 4095;
 
 float volatile Uin=0;
-float volatile Umcu=0;
+uint32_t volatile Umcu=0;
 float volatile Tboard=0;
-float volatile Rntc=4.7; // kOmh
-float volatile Tmcu=0;
+float volatile Rntc=4.7f; // kOmh
+int32_t volatile Tmcu=0;
 
 float volatile Ifb[3]={0}; // phase carrent
 float volatile Ifb0=0; // general currnet
@@ -93,8 +94,11 @@ float volatile rangePWM=0;
 float volatile U0=0; // output of current regulator
 float const T1 = 0.0002f; // sample time for current loop
 float const T2 = 0.002f; // sample time for speed loop
+float const F1 = 5000.f; //
+float const F2 = 500.f; // 
 float const zp=4; // pare pole 
-
+uint16_t volatile tick=0; 
+uint16_t volatile Ntick=0; 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,7 +129,7 @@ int main(void)
   LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
   LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
 
-  NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+  NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_3);
 
   /* System interrupt init*/
 
@@ -151,12 +155,19 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
+  MX_DAC1_Init();
+  MX_TIM3_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 	USER_LPUART1_UART_Init();
 	USER_DMA_Init();
 	USER_ADCx_Init(ADC1);
 	USER_TIM1_PWM_Init();
 	USER_TIM2_ENCODER_Init();
+	USER_TIM3_Init();
+	USER_TIM4_Init();
+	LL_DAC_Enable(DAC1, LL_DAC_CHANNEL_1);
+	LL_DAC_Enable(DAC1, LL_DAC_CHANNEL_2);
   /* USER CODE END 2 */
 
   /* Infinite loop */

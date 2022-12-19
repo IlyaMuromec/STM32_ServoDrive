@@ -205,54 +205,73 @@ void SysTick_Handler(void)
 void DMA1_Channel1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
-	LL_DMA_ClearFlag_TC1(DMA1);
+	tick = LL_TIM_GetCounter(TIM4);
 	static uint32_t count=0;
 	static float Pdel=0;
 	static uint32_t direct=0;
   /* USER CODE END DMA1_Channel1_IRQn 0 */
 
   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
-	Uin = (float)dataADC1[3]/64.79f;
-	Rntc = 19246.5f/((float)dataADC1[4]) - 4.7f;
-	P = PI2*(float)LL_TIM_GetCounter(TIM2)/rangeEnc;
-	if(count==10UL)
+	P = 0.00314f*(float)LL_TIM_GetCounter(TIM2); // PI2*(float)LL_TIM_GetCounter(TIM2)/rangeEnc;
+	if (count==10UL)
 	{
 		count=0UL;
 		direct	= (uint32_t)READ_BIT(TIM2->CR1, TIM_CR1_DIR);
 		if (direct==0UL)
 		{
-			if (P>=Pdel) Vfb = (P-Pdel)/T2;
-			else Vfb = (P+PI2-Pdel)/T2;
+			if (P>=Pdel) Vfb = (P-Pdel)*F2;
+			else Vfb = (P+PI2-Pdel)*F2;
 		} 
 		else
 		{
-			if (P<=Pdel) Vfb = (P-Pdel)/T2;
-			else Vfb = (-Pdel-PI2+P)/T2;
+			if (P<=Pdel) Vfb = (P-Pdel)*F2;
+			else Vfb = (-Pdel-PI2+P)*F2;
 		}
 		Pdel = P;
 		V_data.Err = Vref - Vfb;
 		Iref = -Control_PI(&V_data);
 	}
-	else count++;
+	else count++;	
 	
-	for(int i=0; i<3; i++)
-	{
-		Ifb[i]=-((dataADC1[i])*invKfb - Ibias);
-	}
-	Ifb0=2.0f/3.0f *(sin(P*zp)*Ifb[0] + sin(P*zp+PI23)*Ifb[1] + sin(P*zp+PI43)*Ifb[2]);
+	Ifb[0]=-((dataADC1[0])*invKfb - Ibias);
+	Ifb[1]=-((dataADC1[1])*invKfb - Ibias);
+	Ifb[2]=-((dataADC1[2])*invKfb - Ibias);
+	
+	Ifb0=0.66667f *(sin(P*zp)*Ifb[0] + sin(P*zp+PI23)*Ifb[1] + sin(P*zp+PI43)*Ifb[2]);
 	I_data.Err = Iref - Ifb0;
-	
-	U0 = Control_PI(&I_data);
-	
+	U0 = Control_PI(&I_data);	
 	if (flag_work) 
 	{	
-		PWM[0]=(uint16_t)((U0*sin(P*zp) + 1.0f)*0.5f * rangePWM);
-		PWM[1]=(uint16_t)((U0*sin(P*zp+PI23) + 1.0f)*0.5f * rangePWM);
-		PWM[2]=(uint16_t)((U0*sin(P*zp+PI43) + 1.0f)*0.5f * rangePWM);
+		PWM[0]=(uint16_t)((U0*sin(P*zp) + 1.0f)*8000.f); //*0.5f * rangePWM)
+		PWM[1]=(uint16_t)((U0*sin(P*zp+PI23) + 1.0f)*8000.f);
+		PWM[2]=(uint16_t)((U0*sin(P*zp+PI43) + 1.0f)*8000.f);
 		updataPWM(PWM);
 	}
-	
+	Ntick = LL_TIM_GetCounter(TIM4)>tick ? LL_TIM_GetCounter(TIM4)-tick : LL_TIM_GetAutoReload(TIM4)-tick+LL_TIM_GetCounter(TIM4);
+	LL_DMA_ClearFlag_TC1(DMA1);
   /* USER CODE END DMA1_Channel1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM3 global interrupt.
+  */
+void TIM3_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM3_IRQn 0 */
+	Uin = (float)dataADC1[3]/64.79f;
+	Rntc = 19246.5f/((float)dataADC1[4]) - 4.7f;
+	Umcu = __LL_ADC_CALC_VREFANALOG_VOLTAGE( dataADC1[6], LL_ADC_RESOLUTION_12B );
+	Tmcu = __LL_ADC_CALC_TEMPERATURE( Umcu, dataADC1[5], LL_ADC_RESOLUTION_12B );
+	Vref = ((float)dataADC1[7]-2048.0f)/20.41f;
+	LL_DAC_ConvertData12RightAligned(DAC1, LL_DAC_CHANNEL_2, (uint32_t)(Ifb0*1240.66f + 1861L)); // out: 1.5V + [-1.5; 1.5] for Ifb0 [ -1.5 ; 1.5] A
+	LL_DAC_ConvertData12RightAligned(DAC1, LL_DAC_CHANNEL_1, (uint32_t)(Vfb*12.4f + 1861L)); // out: 1.5V + [-1.5; 1.5]	for Vfb [-150; 150] rad/s
+  /* USER CODE END TIM3_IRQn 0 */
+  /* USER CODE BEGIN TIM3_IRQn 1 */
+	while (LL_TIM_IsActiveFlag_UPDATE(TIM3) == 1 )
+	{
+		LL_TIM_ClearFlag_UPDATE(TIM3);
+	}
+  /* USER CODE END TIM3_IRQn 1 */
 }
 
 /**
