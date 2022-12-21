@@ -1,5 +1,5 @@
 # STM32_ServoDrive
-Vector control of PMSM
+Educational project in the field of motor control
 
 Project goals:
 1) more complete study of the microcontroller STM32G4 with Cortex-M4 core 

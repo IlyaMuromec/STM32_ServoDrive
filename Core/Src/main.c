@@ -53,6 +53,11 @@ const float PI23=2.0943952f;
 const float PI43=4.1887902f;
 const float PI2=6.2832f;
 
+const uint32_t PI_BIT=1000UL;
+const uint32_t PI23_BIT=667;
+const uint32_t PI43_BIT=1333UL;
+const uint32_t PI2_BIT=2000UL;
+
 struct Var_data I_data={0};				
 struct Var_data V_data={0};
 
@@ -75,8 +80,9 @@ float volatile Tboard=0;
 float volatile Rntc=4.7f; // kOmh
 int32_t volatile Tmcu=0;
 
-float volatile Ifb[3]={0}; // phase carrent
+float volatile Ifb[3]={0}; // phase current
 float volatile Ifb0=0; // general currnet
+float volatile Ifb0_tmp=0; // general currnet
 float volatile Iref=0; // reference current
 
 float const Kfb=625.3065f; // Kfb=Rshunt*Kopa*KADC=0.33*1.527*(2^12-1)/3.3
@@ -86,17 +92,19 @@ float const Ibias=3.0918f; //Ibias=Ubias/Rshunt/Kop
 float volatile Vfb=0; // speed of rotor
 float volatile Vref=50; // reference speed of rotor
 float volatile P=0; // position of rotor
+uint32_t volatile P_BIT=0; // position of rotor
+float volatile SIN_BIT[4000]={0}; // sin(position of rotor)
 
 uint32_t volatile flag_work=0L;
 uint32_t volatile PWM[3]={0};
 float volatile rangeEnc=0;
 float volatile rangePWM=0;
 float volatile U0=0; // output of current regulator
-float const T1 = 0.0002f; // sample time for current loop
-float const T2 = 0.002f; // sample time for speed loop
-float const F1 = 5000.f; //
-float const F2 = 500.f; // 
-float const zp=4; // pare pole 
+float const T1 = 0.00005f; // sample time for current loop
+float const T2 = 0.0005f; // sample time for speed loop
+float const F1 = 20000.f; //
+float const F2 = 2000.f; // 
+uint32_t const zp=4; // pare pole 
 uint16_t volatile tick=0; 
 uint16_t volatile Ntick=0; 
 /* USER CODE END PV */
@@ -176,12 +184,17 @@ int main(void)
 	// prepare regulators 
 	rangePWM = LL_TIM_GetAutoReload(TIM1);
 	rangeEnc = LL_TIM_GetAutoReload(TIM2);
-	I_PID_param.Ki = 0.025f; 
-	I_PID_param.Kp = 0.1875f;
+	
+	for(int i=0; i<4000; i++)
+	{
+		SIN_BIT[i]=sin(i*PI2/rangeEnc);
+	}
+	I_PID_param.Ki = 0.0187f; 
+	I_PID_param.Kp = 0.5625f;
 	I_PID_param.limit = 0.95f;
 	I_data.PID = &I_PID_param;
 
-	V_PID_param.Ki = 0.001f;
+	V_PID_param.Ki = 0.00026f;
 	V_PID_param.Kp = 0.0103f;
 	V_PID_param.limit = 5.0f;
 	V_data.PID = &V_PID_param;

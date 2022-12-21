@@ -86,6 +86,7 @@ extern int32_t volatile Tmcu;
 
 extern volatile float Ifb[3];
 extern volatile float Ifb0;
+extern float volatile Ifb0_tmp; // general currnet
 extern volatile float Iref;
 extern float const Kfb;
 extern float const invKfb;
@@ -93,6 +94,7 @@ extern float const Ibias;
 extern volatile float Vfb;
 extern volatile float Vref;
 extern volatile float P;
+extern uint32_t volatile P_BIT; // position of rotor
 
 extern uint32_t volatile PWM[3];
 extern float volatile rangePWM;
@@ -102,10 +104,12 @@ extern const float T1;
 extern const float T2;
 extern float const F1; //
 extern float const F2; // 
-extern float const zp;
+extern uint32_t const zp;
 extern uint32_t volatile flag_work;
 extern uint16_t volatile tick;
 extern uint16_t volatile Ntick;
+
+extern float volatile SIN_BIT[4000]; // sin(position of rotor)
 
 /* USER CODE END ET */
 
@@ -115,6 +119,11 @@ extern const float PI;
 extern const float PI23;
 extern const float PI43;
 extern const float PI2;
+
+extern const uint32_t PI_BIT;
+extern const uint32_t PI23_BIT;
+extern const uint32_t PI43_BIT;
+extern const uint32_t PI2_BIT;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

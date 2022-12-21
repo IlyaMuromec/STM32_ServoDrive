@@ -212,7 +212,8 @@ void DMA1_Channel1_IRQHandler(void)
   /* USER CODE END DMA1_Channel1_IRQn 0 */
 
   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
-	P = 0.00314f*(float)LL_TIM_GetCounter(TIM2); // PI2*(float)LL_TIM_GetCounter(TIM2)/rangeEnc;
+	P_BIT = LL_TIM_GetCounter(TIM2);
+	P = PI2*(float)LL_TIM_GetCounter(TIM2)/rangeEnc;
 	if (count==10UL)
 	{
 		count=0UL;
@@ -237,14 +238,15 @@ void DMA1_Channel1_IRQHandler(void)
 	Ifb[1]=-((dataADC1[1])*invKfb - Ibias);
 	Ifb[2]=-((dataADC1[2])*invKfb - Ibias);
 	
-	Ifb0=0.66667f *(sin(P*zp)*Ifb[0] + sin(P*zp+PI23)*Ifb[1] + sin(P*zp+PI43)*Ifb[2]);
+	Ifb0=0.6667f*(SIN_BIT[(P_BIT*zp)%PI2_BIT]*Ifb[0] + SIN_BIT[(P_BIT*zp+PI23_BIT)%PI2_BIT]*Ifb[1] + SIN_BIT[(P_BIT*zp+PI43_BIT)%PI2_BIT]*Ifb[2]);
+	
 	I_data.Err = Iref - Ifb0;
 	U0 = Control_PI(&I_data);	
 	if (flag_work) 
 	{	
-		PWM[0]=(uint16_t)((U0*sin(P*zp) + 1.0f)*8000.f); //*0.5f * rangePWM)
-		PWM[1]=(uint16_t)((U0*sin(P*zp+PI23) + 1.0f)*8000.f);
-		PWM[2]=(uint16_t)((U0*sin(P*zp+PI43) + 1.0f)*8000.f);
+		PWM[0]=(uint16_t)((U0*SIN_BIT[(P_BIT*zp)%PI2_BIT] + 1.0f)*0.5f * rangePWM);
+		PWM[1]=(uint16_t)((U0*SIN_BIT[(P_BIT*zp+PI23_BIT)%PI2_BIT] + 1.0f)*0.5f * rangePWM);
+		PWM[2]=(uint16_t)((U0*SIN_BIT[(P_BIT*zp+PI43_BIT)%PI2_BIT] + 1.0f)*0.5f * rangePWM);
 		updataPWM(PWM);
 	}
 	Ntick = LL_TIM_GetCounter(TIM4)>tick ? LL_TIM_GetCounter(TIM4)-tick : LL_TIM_GetAutoReload(TIM4)-tick+LL_TIM_GetCounter(TIM4);
