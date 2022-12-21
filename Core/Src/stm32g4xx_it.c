@@ -243,10 +243,12 @@ void DMA1_Channel1_IRQHandler(void)
 	I_data.Err = Iref - Ifb0;
 	U0 = Control_PI(&I_data);	
 	if (flag_work) 
-	{	
-		PWM[0]=(uint16_t)((U0*SIN_BIT[(P_BIT*zp)%PI2_BIT] + 1.0f)*0.5f * rangePWM);
-		PWM[1]=(uint16_t)((U0*SIN_BIT[(P_BIT*zp+PI23_BIT)%PI2_BIT] + 1.0f)*0.5f * rangePWM);
-		PWM[2]=(uint16_t)((U0*SIN_BIT[(P_BIT*zp+PI43_BIT)%PI2_BIT] + 1.0f)*0.5f * rangePWM);
+	{
+		static float mod3harm=0;
+		mod3harm =0.1667f*SIN_BIT[(P_BIT*zp*3)%PI2_BIT];
+		PWM[0]=(uint16_t)((1.155f*U0*(SIN_BIT[(P_BIT*zp)%PI2_BIT]+mod3harm) + 1.0f)*0.5f * rangePWM);
+		PWM[1]=(uint16_t)((1.155f*U0*(SIN_BIT[(P_BIT*zp+PI23_BIT)%PI2_BIT]+mod3harm) + 1.0f)*0.5f * rangePWM);
+		PWM[2]=(uint16_t)((1.155f*U0*(SIN_BIT[(P_BIT*zp+PI43_BIT)%PI2_BIT]+mod3harm) + 1.0f)*0.5f * rangePWM);
 		updataPWM(PWM);
 	}
 	Ntick = LL_TIM_GetCounter(TIM4)>tick ? LL_TIM_GetCounter(TIM4)-tick : LL_TIM_GetAutoReload(TIM4)-tick+LL_TIM_GetCounter(TIM4);
