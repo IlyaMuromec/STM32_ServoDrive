@@ -14,6 +14,31 @@
   * License. You may obtain a copy of the License at:
   *                        opensource.org/licenses/BSD-3-Clause
   *
+	* Software implement vector control system for PMSM.
+	* Using hardware: 
+	*  PMSM ACM601V36-T2500 with bield-in encoder 2000PPR, 
+	*  bord with inventer x-nucleo-ihm07m1,
+  *  bord with MCU nucleo-g474,
+	*  supply with 8 Volt.
+	* 
+	* Program execution sequence
+	*	1) Program starts with declaration and definition nessesary vars and constants
+	* 2) Then initiation of nessesary peripheral units is executed. These are
+	*   TIM1 for generating PWM signals in up/down mode with 20 kHz frequency and calling ADC1
+	*   TIM2 for geting signal of encoder 
+	*   TIM3 for generating interruption with 2 kHz frequency for handling no importent vars
+	*   ADC1 for measuring phase currents, supply voltage, temperature and voltage of target of speed
+	*   DMA1 for transfering data from ADC1 regulag register to array dataADC1[8] and calling interruption
+	*   USART for communicating with PC in future
+	*   DAC1 for output analog signals of speed and general current
+	*   GPIO for getting and setting signals enable and fault
+	* 3) Then encoder is colibrated
+	* 4) After initialization forever loop starts and all work implements in interruptions
+	*   current loop is solved in interruption of DMA with frequency 20 kHz
+  *   speed loop is solved also in	interruption of DMA but with frequency 2 kHz
+  *   handling other analog signal and prepering analog output are complited in interruption of TIM3 with frequency 2 kHz
+  *   interface with PC will be implement in interruption of UART 	
+	
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -48,15 +73,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-const float PI=3.14159265f;
 const float PI23=2.0943952f;
-const float PI43=4.1887902f;
 const float PI2=6.2832f;
 
-const uint32_t PI_BIT=1000UL;
-const uint32_t PI23_BIT=667;
-const uint32_t PI43_BIT=1333UL;
-const uint32_t PI2_BIT=2000UL;
+const uint32_t PI43_BIT=1354; // 2/3 full turnover encoder in bits
+const uint32_t PI23_BIT=667; // 1/3 full turnover encoder in bits
+const uint32_t PI2_BIT=2000UL; // full turnover encoder in bits
 
 struct Var_data I_data={0};				
 struct Var_data V_data={0};
@@ -64,7 +86,7 @@ struct Var_data V_data={0};
 struct PID_param I_PID_param={0};
 struct PID_param V_PID_param={0};
 
-uint32_t volatile dataADC1[8]={0};
+uint32_t volatile dataADC1[8]={0}; // Array is filled by DMA
 // dataADC[0]=IA;
 // dataADC[1]=IB;
 // dataADC[2]=IC;
@@ -74,15 +96,15 @@ uint32_t volatile dataADC1[8]={0};
 // dataADC[6]~Umc;
 // max data = 2^12 - 1 = 4095;
 
-float volatile Uin=0;
-uint32_t volatile Umcu=0;
-float volatile Tboard=0;
+float volatile Uin=0; // voltage of power supply
+uint32_t volatile Umcu=0; // voltage of MCU supply
+float volatile Tboard=0; // temperature of inverter
 float volatile Rntc=4.7f; // kOmh
-int32_t volatile Tmcu=0;
+int32_t volatile Tmcu=0; // temperature of MCU
 
 float volatile Ifb[3]={0}; // phase current
-float volatile Ifb0=0; // general currnet
-float volatile Ifb0_tmp=0; // general currnet
+float volatile Ifb0=0; // general current
+float volatile Ifb0_tmp=0; // general current
 float volatile Iref=0; // reference current
 
 float const Kfb=625.3065f; // Kfb=Rshunt*Kopa*KADC=0.33*1.527*(2^12-1)/3.3
@@ -102,8 +124,8 @@ float volatile rangePWM=0;
 float volatile U0=0; // output of current regulator
 float const T1 = 0.00005f; // sample time for current loop
 float const T2 = 0.0005f; // sample time for speed loop
-float const F1 = 20000.f; //
-float const F2 = 2000.f; // 
+float const F1 = 20000.f; // frequency of current loop
+float const F2 = 2000.f; // frequency of speed loop 
 uint32_t const zp=4; // pare pole 
 uint16_t volatile tick=0; 
 uint16_t volatile Ntick=0; 
@@ -180,15 +202,16 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-	// prepare regulators 
-	rangePWM = LL_TIM_GetAutoReload(TIM1);
+	
+	rangePWM = LL_TIM_GetAutoReload(TIM1); 
 	rangeEnc = LL_TIM_GetAutoReload(TIM2);
 	
-	for(int i=0; i<4000; i++)
+	// prepare array with value of sin for coordinate transformations  
+	for(int i=0; i<rangeEnc; i++)
 	{
 		SIN_BIT[i]=sin(i*PI2/rangeEnc);
 	}
+	// prepare regulators 
 	I_PID_param.Ki = 0.0187f; 
 	I_PID_param.Kp = 0.5625f;
 	I_PID_param.limit = 0.95f;
@@ -271,8 +294,9 @@ float Control_PI( struct Var_data *Data)
 {
 	float contr_out=0;
 	
-	Data->Integ = Data->Err * Data->PID->Ki + Data->Integ;
+	Data->Integ = Data->Err * Data->PID->Ki + Data->Integ; // Integral
 	
+	// Limiting
 	if (Data->Integ  >  Data->PID->limit){
 		Data->Integ = Data->PID->limit;}
 	else if (Data->Integ  <  -Data->PID->limit){
@@ -280,8 +304,9 @@ float Control_PI( struct Var_data *Data)
 	else{
 		Data->Integ = Data->Integ;}
 	
-	contr_out = Data->Integ + Data->PID->Kp * Data->Err;
+	contr_out = Data->Integ + Data->PID->Kp * Data->Err;  // Integral and Proportion
 	
+	// Limiting
 	if (contr_out  >  Data->PID->limit){
 		contr_out = Data->PID->limit;}
 	else if (contr_out  <  -Data->PID->limit){

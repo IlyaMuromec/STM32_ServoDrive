@@ -57,8 +57,8 @@ void	USER_DMA_Init(void)
   LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_1, (uint32_t)LL_ADC_DMA_GetRegAddr(ADC1, LL_ADC_DMA_REG_REGULAR_DATA), 
 																														 (uint32_t)dataADC1, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 	LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, sizeADC1);
-	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1); // Enable Transfer complete interrupt.
-	LL_DMA_ClearFlag_GI1(DMA1);	// Clear Channel 1 global interrupt flag.
+	LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1); // Enable Transfer complete interruption.
+	LL_DMA_ClearFlag_GI1(DMA1);	// Clear Channel 1 global interruption flag.
 	LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
 }
 /* USER CODE END 2 */

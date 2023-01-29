@@ -53,12 +53,16 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+
+/* Struct for variables of state of system. 
+ * Using struct is useful for parameter passing in function of PID controller
+ */
 struct Var_data
 {
-	float 	Err;
-	float 	Integ;
-	float		Filter;
-	struct	PID_param* PID;
+	float 	Err; // Error between target and feedback
+	float 	Integ; // Integlral part of output
+	float		Filter; // 
+	struct	PID_param* PID; // coef of PID controllera
 };
 
 extern struct PID_param I_PID_param;
@@ -66,45 +70,45 @@ extern struct PID_param V_PID_param;
 
 struct PID_param
 {
-	volatile float Kp;
-	volatile float Ki;
-	volatile float Kd;
-	volatile float limit;
+	volatile float Kp; // P part of PID controller
+	volatile float Ki; // I part of PID controller
+	volatile float Kd; // D part of PID controller
+	volatile float limit; // Limitting of output
 	volatile float Nd;
 };
 
 extern struct Var_data I_data;				
 extern struct Var_data V_data;
 
-extern volatile uint32_t dataADC1[8];
+extern volatile uint32_t dataADC1[8]; // Array is filled by DMA
 
-extern float volatile Uin;
-extern uint32_t volatile Umcu;
-extern float volatile Tboard;
-extern float volatile Rntc; 
-extern int32_t volatile Tmcu;
+extern float volatile Uin;// supply voltage
+extern uint32_t volatile Umcu; // mcu voltage
+extern float volatile Tboard; // temperature of board
+extern float volatile Rntc;  // 
+extern int32_t volatile Tmcu; // temperature of mcu
 
-extern volatile float Ifb[3];
-extern volatile float Ifb0;
-extern float volatile Ifb0_tmp; // general currnet
-extern volatile float Iref;
-extern float const Kfb;
+extern volatile float Ifb[3]; // phase currents
+extern volatile float Ifb0; // general currnet
+extern float volatile Ifb0_tmp; 
+extern volatile float Iref; // reference current
+extern float const Kfb;  // Kfb=Rshunt*Kopa*KADC
 extern float const invKfb;
-extern float const Ibias; 
-extern volatile float Vfb;
-extern volatile float Vref;
-extern volatile float P;
-extern uint32_t volatile P_BIT; // position of rotor
+extern float const Ibias; //Ibias=Ubias/Rshunt/Kop
+extern volatile float Vfb; // speed of rotor
+extern volatile float Vref; // reference speed of roto
+extern volatile float P; // position of rotor in radians
+extern uint32_t volatile P_BIT; // position of rotor in bits
 
 extern uint32_t volatile PWM[3];
 extern float volatile rangePWM;
 extern float volatile rangeEnc;
-extern float volatile U0;
-extern const float T1;
-extern const float T2;
-extern float const F1; //
-extern float const F2; // 
-extern uint32_t const zp;
+extern float volatile U0; // output of current regulator
+extern const float T1; // sample time for current loop
+extern const float T2; // sample time for speed loop
+extern float const F1; // frequency of current loop
+extern float const F2; // frequency of speed loop
+extern uint32_t const zp; // pare pole
 extern uint32_t volatile flag_work;
 extern uint16_t volatile tick;
 extern uint16_t volatile Ntick;
@@ -115,14 +119,11 @@ extern float volatile SIN_BIT[4000]; // sin(position of rotor)
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-extern const float PI;
 extern const float PI23;
-extern const float PI43;
 extern const float PI2;
 
-extern const uint32_t PI_BIT;
-extern const uint32_t PI23_BIT;
 extern const uint32_t PI43_BIT;
+extern const uint32_t PI23_BIT;
 extern const uint32_t PI2_BIT;
 /* USER CODE END EC */
 

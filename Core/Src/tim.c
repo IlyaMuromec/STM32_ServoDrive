@@ -22,6 +22,12 @@
 
 /* USER CODE BEGIN 0 */
 
+/*
+ *  TIM1 for generating PWM signals in up/down mode with 20 kHz frequency and calling ADC1
+ *  TIM2 for geting signal of encoder 
+ *  TIM3 for generating interaption with 2 kHz frequency for handling no importent vars
+ */
+	
 /* USER CODE END 0 */
 
 /* TIM1 init function */
@@ -263,20 +269,19 @@ void USER_TIM2_ENCODER_Init(void)
 	LL_TIM_EnableCounter(TIM2);
 }
 
-void USER_TIM5_SIN_Init(void)
-{
-	LL_TIM_EnableCounter(TIM5);
-}
-
+/* Calibration encoder
+ * Shaft of motor and encoder start rotate to axis of phase A as a result supply this phase 
+ * When shaft stops current position become zero
+ * Then supply of phase A is turned off
+ */
 void calibEncoder(volatile uint32_t* REF)
 {
-	// start caibration encoder
-	REF[0] = LL_TIM_GetAutoReload(TIM1)/3;
+	REF[0] = LL_TIM_GetAutoReload(TIM1)/3; // turn on supply phase A
 	REF[1] = 0;
 	REF[2] = 0;
-	int32_t flagStop=100;
+	int32_t flagStop=100; // filter
 	volatile uint32_t alfa0 = LL_TIM_GetCounter(TIM2);
-	updataPWM(REF);
+	updataPWM(REF); // start moving
 	while(flagStop)
 	{
 		if(alfa0==LL_TIM_GetCounter(TIM2)) {flagStop--;}
@@ -284,9 +289,9 @@ void calibEncoder(volatile uint32_t* REF)
 		for(int i=1000; i>0; i--){;}
 	}
 	LL_mDelay(200);
-	LL_TIM_SetCounter(TIM2, 0);
+	LL_TIM_SetCounter(TIM2, 0); // set new zero position
 	for(int i=0; i<3; i++) { REF[i]=0; }
-	updataPWM(REF);
+	updataPWM(REF); // turn off supply phase
 	// stop caibration encoder
 }
 /* USER CODE END 1 */

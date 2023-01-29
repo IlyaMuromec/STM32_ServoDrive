@@ -206,49 +206,53 @@ void DMA1_Channel1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
 	tick = LL_TIM_GetCounter(TIM4);
-	static uint32_t count=0;
+	static uint32_t count=0; // count is used to reduce frequency of velocity loop in 10 time
 	static float Pdel=0;
-	static uint32_t direct=0;
+	static uint32_t direct=0; // direction of rotate
   /* USER CODE END DMA1_Channel1_IRQn 0 */
 
   /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
-	P_BIT = LL_TIM_GetCounter(TIM2);
-	P = PI2*(float)LL_TIM_GetCounter(TIM2)/rangeEnc;
+	P_BIT = LL_TIM_GetCounter(TIM2); // position of encoder in bits
+	P = PI2*(float)LL_TIM_GetCounter(TIM2)/rangeEnc; // position of encoder in physics units (radians)
 	if (count==10UL)
 	{
 		count=0UL;
-		direct	= (uint32_t)READ_BIT(TIM2->CR1, TIM_CR1_DIR);
-		if (direct==0UL)
+		direct	= (uint32_t)READ_BIT(TIM2->CR1, TIM_CR1_DIR); // detect of direction
+		if (direct==0UL) // solve velocity taking in account direction of rotate and transition over zerrow
 		{
 			if (P>=Pdel) Vfb = (P-Pdel)*F2;
-			else Vfb = (P+PI2-Pdel)*F2;
+			else Vfb = (P+PI2-Pdel)*F2; // transition over zerrow
 		} 
 		else
 		{
 			if (P<=Pdel) Vfb = (P-Pdel)*F2;
-			else Vfb = (-Pdel-PI2+P)*F2;
+			else Vfb = (-Pdel-PI2+P)*F2; // transition over zerrow
 		}
 		Pdel = P;
 		V_data.Err = Vref - Vfb;
 		Iref = -Control_PI(&V_data);
 	}
 	else count++;	
-	
+	// get currents of phases in physics units (Ampers)
 	Ifb[0]=-((dataADC1[0])*invKfb - Ibias);
 	Ifb[1]=-((dataADC1[1])*invKfb - Ibias);
 	Ifb[2]=-((dataADC1[2])*invKfb - Ibias);
 	
+	// solve of general current of stator where
+	// SIN_BIT[BIT] - array where index is position of encoder in bits and value is sin(index)
+	// (P_BIT*zp)%PI2_BIT - angle between phase A and axix of general current
 	Ifb0=0.6667f*(SIN_BIT[(P_BIT*zp)%PI2_BIT]*Ifb[0] + SIN_BIT[(P_BIT*zp+PI23_BIT)%PI2_BIT]*Ifb[1] + SIN_BIT[(P_BIT*zp+PI43_BIT)%PI2_BIT]*Ifb[2]);
 	
 	I_data.Err = Iref - Ifb0;
-	U0 = Control_PI(&I_data);	
+	U0 = Control_PI(&I_data);	// control signal for PWM
 	if (flag_work) 
 	{
 		static float mod3harm=0;
-		mod3harm =0.1667f*SIN_BIT[(P_BIT*zp*3)%PI2_BIT];
+		mod3harm =0.1667f*SIN_BIT[(P_BIT*zp*3)%PI2_BIT]; // part of modulation of 3rd harmonic
 		PWM[0]=(uint16_t)((1.155f*U0*(SIN_BIT[(P_BIT*zp)%PI2_BIT]+mod3harm) + 1.0f)*0.5f * rangePWM);
 		PWM[1]=(uint16_t)((1.155f*U0*(SIN_BIT[(P_BIT*zp+PI23_BIT)%PI2_BIT]+mod3harm) + 1.0f)*0.5f * rangePWM);
 		PWM[2]=(uint16_t)((1.155f*U0*(SIN_BIT[(P_BIT*zp+PI43_BIT)%PI2_BIT]+mod3harm) + 1.0f)*0.5f * rangePWM);
+		// where 1/6 = 0.1667, 2/sqrt(3) = 1.155
 		updataPWM(PWM);
 	}
 	Ntick = LL_TIM_GetCounter(TIM4)>tick ? LL_TIM_GetCounter(TIM4)-tick : LL_TIM_GetAutoReload(TIM4)-tick+LL_TIM_GetCounter(TIM4);
