@@ -25,21 +25,21 @@ Using hardware:
 
 Program execution sequence
 1) Program starts with declaration and definition nessesary vars and constants.
-2) Then initiation of nessesary peripheral units is executed. These are
- TIM1 for generating PWM signals in up/down mode with 20 kHz frequency and calling ADC1
- TIM2 for geting signal of encoder 
- TIM3 for generating interruption with 2 kHz frequency for handling no importent vars
- ADC1 for measuring phase currents, supply voltage, temperature and voltage of target of speed
- DMA1 for transfering data from ADC1 regulag register to array dataADC1[8] and calling interruption
- USART for communicating with PC in future
- DAC1 for output analog signals of speed and general current
- GPIO for getting and setting signals enable and fault
+2) Then initiation of nessesary peripheral units is executed. These are:
+ TIM1 for generating PWM signals in up/down mode with 20 kHz frequency and calling ADC1,
+ TIM2 for geting signal of encoder,
+ TIM3 for generating interruption with 2 kHz frequency for handling no importent vars,
+ ADC1 for measuring phase currents, supply voltage, temperature and voltage of target of speed,
+ DMA1 for transfering data from ADC1 regulag register to array dataADC1[8] and calling interruption,
+ USART for communicating with PC in future,
+ DAC1 for output analog signals of speed and general current,
+ GPIO for getting and setting signals enable and fault,
 3) Then encoder is colibrated
-4) After initialization forever loop starts and all work implements in interruptions
- current loop is solved in interruption of DMA with frequency 20 kHz
- speed loop is solved also in	interruption of DMA but with frequency 2 kHz
- handling other analog signal and prepering analog output are complited in interruption of TIM3 with frequency 2 kHz
- interface with PC will be implement in interruption of UART 
+4) After initialization forever loop starts and all work implements in interruptions:
+ current loop is solved in interruption of DMA with frequency 20 kHz,
+ speed loop is solved also in	interruption of DMA but with frequency 2 kHz,
+ handling other analog signal and prepering analog output are complited in interruption of TIM3 with frequency 2 kHz,
+ interface with PC will be implement in interruption of UART. 
 
 
 
