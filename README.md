@@ -22,18 +22,19 @@ Software implement vector control system for PMSM.
 * PMSM ACM601V36-T2500 with bield-in encoder 2000PPR, 
 * bord with inventer x-nucleo-ihm07m1,
 * bord with MCU nucleo-g474.
+* supply KA3005D with 30 Volts and 5 Ampers
 
 #### Program execution sequence
 1) Program starts with declaration and definition nessesary vars and constants.
 2) Then initiation of nessesary peripheral units is executed. These are:  
  TIM1 for generating PWM signals in up/down mode with 20 kHz frequency and calling ADC1,  
- TIM2 for geting signal of encoder,  
+ TIM2 for getting signal of encoder,  
  TIM3 for generating interruption with 2 kHz frequency for handling no importent vars,  
  ADC1 for measuring phase currents, supply voltage, temperature and voltage of target of speed,  
  DMA1 for transfering data from ADC1 regulag register to array dataADC1[8] and calling interruption,  
  USART for communicating with PC in future,  
  DAC1 for output analog signals of speed and general current,  
- GPIO for getting and setting signals enable and fault,  
+ GPIO for getting and setting signals enable and fault  
 3) Then encoder is colibrated
 4) After initialization forever loop starts and all work implements in interruptions:  
  current loop is solved in interruption of DMA with frequency 20 kHz,  
